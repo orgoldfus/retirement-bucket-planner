@@ -1,8 +1,8 @@
-import React from 'react';
-import NeoBrutalInput from './NeoBrutalInput';
-import NeoBrutalBox from './NeoBrutalBox';
-import { Currency } from '../types';
-import { formatCurrency } from '../utils/calculations';
+import React from "react";
+import { Currency } from "../types";
+import { formatCurrency } from "../utils/calculations";
+import NeoBrutalBox from "./NeoBrutalBox";
+import NeoBrutalInput from "./NeoBrutalInput";
 
 interface TotalCapitalInputProps {
   totalCapital: number;
@@ -17,7 +17,7 @@ const TotalCapitalInput: React.FC<TotalCapitalInputProps> = ({
   setTotalCapital,
   selectedCurrency,
   setSelectedCurrency,
-  currencies
+  currencies,
 }) => {
   return (
     <NeoBrutalBox title="Total Retirement Capital" className="mb-6">
@@ -42,7 +42,9 @@ const TotalCapitalInput: React.FC<TotalCapitalInputProps> = ({
             <select
               value={selectedCurrency.code}
               onChange={(e) => {
-                const currency = currencies.find(c => c.code === e.target.value);
+                const currency = currencies.find(
+                  (c) => c.code === e.target.value
+                );
                 if (currency) setSelectedCurrency(currency);
               }}
               className="
@@ -75,7 +77,8 @@ const TotalCapitalInput: React.FC<TotalCapitalInputProps> = ({
         </div>
       </div>
       <p className="mt-4 text-neutral-700 font-brutal">
-        You have {formatCurrency(totalCapital, selectedCurrency.symbol)} in total retirement savings.
+        You have {formatCurrency(totalCapital, selectedCurrency.symbol)} in
+        total retirement savings.
       </p>
     </NeoBrutalBox>
   );

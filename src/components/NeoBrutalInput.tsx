@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface NeoBrutalInputProps {
   label: string;
@@ -20,21 +20,22 @@ const NeoBrutalInput: React.FC<NeoBrutalInputProps> = ({
   label,
   value,
   onChange,
-  type = 'text',
-  placeholder = '',
+  type = "text",
+  placeholder = "",
   min,
   max,
   step,
   required = false,
-  className = '',
+  className = "",
   prefix,
   suffix,
-  error
+  error,
 }) => {
   return (
     <div className={`mb-4 ${className}`}>
       <label className="block font-brutal font-bold mb-2 text-neutral-900">
-        {label}{required && <span className="text-error-500 ml-1">*</span>}
+        {label}
+        {required && <span className="text-error-500 ml-1">*</span>}
       </label>
       <div className="relative">
         {prefix && (
@@ -60,9 +61,9 @@ const NeoBrutalInput: React.FC<NeoBrutalInputProps> = ({
             focus:outline-none focus:ring-0 
             focus:border-primary-500 
             focus:shadow-none focus:translate-x-1 focus:translate-y-1
-            ${prefix ? 'pl-8' : ''}
-            ${suffix ? 'pr-8' : ''}
-            ${error ? 'border-error-500 bg-error-50' : ''}
+            ${prefix ? "pl-8" : ""}
+            ${suffix ? "pr-8" : ""}
+            ${error ? "border-error-500 bg-error-50" : ""}
           `}
         />
         {suffix && (
@@ -71,7 +72,9 @@ const NeoBrutalInput: React.FC<NeoBrutalInputProps> = ({
           </div>
         )}
       </div>
-      {error && <p className="mt-1 text-error-500 text-sm font-brutal">{error}</p>}
+      {error && (
+        <p className="mt-1 text-error-500 text-sm font-brutal">{error}</p>
+      )}
     </div>
   );
 };

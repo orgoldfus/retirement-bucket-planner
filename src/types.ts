@@ -1,7 +1,7 @@
 export interface Asset {
   id: string;
   name: string;
-  type: 'international' | 'israeli' | 'custom';
+  type: "international" | "israeli" | "custom";
   description: string;
   historicalReturn: {
     oneYear: number;
@@ -26,7 +26,12 @@ export interface AssetAllocation {
   percentage: number;
 }
 
-export type TimeFrame = 'oneYear' | 'fiveYear' | 'tenYear' | 'twentyYear' | 'thirtyYear';
+export type TimeFrame =
+  | "oneYear"
+  | "fiveYear"
+  | "tenYear"
+  | "twentyYear"
+  | "thirtyYear";
 
 export interface Currency {
   code: string;

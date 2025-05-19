@@ -1,8 +1,12 @@
-import React from 'react';
-import NeoBrutalBox from './NeoBrutalBox';
-import NeoBrutalInput from './NeoBrutalInput';
-import { Bucket, Currency, WithdrawalPlan, TimeFrame, PortfolioProjection } from '../types';
-import { formatCurrency, projectPortfolio, estimatePortfolioLongevity } from '../utils/calculations';
+import React from "react";
+import { Bucket, Currency, TimeFrame, WithdrawalPlan } from "../types";
+import {
+  estimatePortfolioLongevity,
+  formatCurrency,
+  projectPortfolio,
+} from "../utils/calculations";
+import NeoBrutalBox from "./NeoBrutalBox";
+import NeoBrutalInput from "./NeoBrutalInput";
 
 interface WithdrawalPlanningProps {
   totalCapital: number;
@@ -19,12 +23,12 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
   withdrawalPlan,
   setWithdrawalPlan,
   selectedCurrency,
-  selectedTimeFrame
+  selectedTimeFrame,
 }) => {
   const updateWithdrawalPlan = (field: keyof WithdrawalPlan, value: any) => {
     setWithdrawalPlan({
       ...withdrawalPlan,
-      [field]: value
+      [field]: value,
     });
   };
 
@@ -45,7 +49,9 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
           <NeoBrutalInput
             label="Annual Withdrawal Amount"
             value={withdrawalPlan.annualAmount}
-            onChange={(e) => updateWithdrawalPlan('annualAmount', Number(e.target.value) || 0)}
+            onChange={(e) =>
+              updateWithdrawalPlan("annualAmount", Number(e.target.value) || 0)
+            }
             type="number"
             min={0}
             step={1000}
@@ -63,7 +69,9 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
                 <input
                   type="checkbox"
                   checked={withdrawalPlan.adjustForInflation}
-                  onChange={(e) => updateWithdrawalPlan('adjustForInflation', e.target.checked)}
+                  onChange={(e) =>
+                    updateWithdrawalPlan("adjustForInflation", e.target.checked)
+                  }
                   className="
                     form-checkbox w-5 h-5
                     border-3 border-black
@@ -71,7 +79,9 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
                     focus:ring-0 focus:outline-none
                   "
                 />
-                <span className="ml-2 font-brutal">Enable inflation adjustment</span>
+                <span className="ml-2 font-brutal">
+                  Enable inflation adjustment
+                </span>
               </label>
             </div>
           </div>
@@ -79,7 +89,12 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
             <NeoBrutalInput
               label="Annual Inflation Rate (%)"
               value={withdrawalPlan.inflationRate}
-              onChange={(e) => updateWithdrawalPlan('inflationRate', Number(e.target.value) || 0)}
+              onChange={(e) =>
+                updateWithdrawalPlan(
+                  "inflationRate",
+                  Number(e.target.value) || 0
+                )
+              }
               type="number"
               min={0}
               max={20}
@@ -91,36 +106,40 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
       </div>
 
       <div className="bg-white border-3 border-black p-4 mb-4">
-        <h3 className="font-brutal font-bold mb-4">Portfolio Longevity Projection</h3>
-        
+        <h3 className="font-brutal font-bold mb-4">
+          Portfolio Longevity Projection
+        </h3>
+
         <div className="flex justify-between items-center mb-2">
           <span className="font-brutal">Estimated Portfolio Duration:</span>
-          <span className={`font-brutal font-bold text-lg ${
-            portfolioLongevity < 20 
-              ? 'text-error-500' 
-              : portfolioLongevity < 30 
-                ? 'text-warning-500' 
-                : 'text-success-500'
-          }`}>
-            {portfolioLongevity === lastProjectionYear 
-              ? '30+ years' 
+          <span
+            className={`font-brutal font-bold text-lg ${
+              portfolioLongevity < 20
+                ? "text-error-500"
+                : portfolioLongevity < 30
+                ? "text-warning-500"
+                : "text-success-500"
+            }`}
+          >
+            {portfolioLongevity === lastProjectionYear
+              ? "30+ years"
               : `${portfolioLongevity} years`}
           </span>
         </div>
-        
+
         <div className="w-full h-8 bg-neutral-200 border-3 border-black mb-4 overflow-hidden">
-          <div 
+          <div
             className={`h-full ${
-              portfolioLongevity < 20 
-                ? 'bg-error-500' 
-                : portfolioLongevity < 30 
-                  ? 'bg-warning-500' 
-                  : 'bg-success-500'
+              portfolioLongevity < 20
+                ? "bg-error-500"
+                : portfolioLongevity < 30
+                ? "bg-warning-500"
+                : "bg-success-500"
             }`}
             style={{ width: `${(portfolioLongevity / 30) * 100}%` }}
           ></div>
         </div>
-        
+
         <div className="overflow-auto">
           <table className="w-full border-collapse font-brutal">
             <thead>
@@ -133,43 +152,64 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
             </thead>
             <tbody>
               {projections.slice(0, 10).map((projection) => (
-                <tr 
-                  key={projection.year} 
+                <tr
+                  key={projection.year}
                   className={`
                     border-3 border-black
-                    ${projection.portfolioValue <= 0 ? 'bg-error-100' : 'odd:bg-white even:bg-neutral-100'}
+                    ${
+                      projection.portfolioValue <= 0
+                        ? "bg-error-100"
+                        : "odd:bg-white even:bg-neutral-100"
+                    }
                   `}
                 >
                   <td className="p-2 font-bold">{projection.year}</td>
                   <td className="p-2 text-right">
-                    {formatCurrency(projection.portfolioValue, selectedCurrency.symbol)}
+                    {formatCurrency(
+                      projection.portfolioValue,
+                      selectedCurrency.symbol
+                    )}
                   </td>
                   <td className="p-2 text-right">
-                    {formatCurrency(projection.withdrawal, selectedCurrency.symbol)}
+                    {formatCurrency(
+                      projection.withdrawal,
+                      selectedCurrency.symbol
+                    )}
                   </td>
                   <td className="p-2 text-right">
-                    {formatCurrency(projection.returns, selectedCurrency.symbol)}
+                    {formatCurrency(
+                      projection.returns,
+                      selectedCurrency.symbol
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        
+
         {projections.length > 10 && (
           <div className="mt-2 text-center font-brutal text-sm text-neutral-600">
             Showing first 10 years of projection. Full data available in export.
           </div>
         )}
       </div>
-      
+
       <div className="p-4 bg-primary-100 border-l-6 border-primary-500">
         <h3 className="font-brutal font-bold mb-2">Withdrawal Strategy</h3>
         <p className="font-brutal text-sm">
-          Your planned annual withdrawal of {formatCurrency(withdrawalPlan.annualAmount, selectedCurrency.symbol)}
-          {withdrawalPlan.adjustForInflation ? ` (adjusted for inflation at ${withdrawalPlan.inflationRate}% per year)` : ''} 
-          is projected to last {portfolioLongevity === lastProjectionYear ? '30+ years' : `approximately ${portfolioLongevity} years`}.
-          {portfolioLongevity < 20 && ' Consider reducing your withdrawal amount or adjusting your asset allocation for longevity.'}
+          Your planned annual withdrawal of{" "}
+          {formatCurrency(withdrawalPlan.annualAmount, selectedCurrency.symbol)}
+          {withdrawalPlan.adjustForInflation
+            ? ` (adjusted for inflation at ${withdrawalPlan.inflationRate}% per year)`
+            : ""}
+          is projected to last{" "}
+          {portfolioLongevity === lastProjectionYear
+            ? "30+ years"
+            : `approximately ${portfolioLongevity} years`}
+          .
+          {portfolioLongevity < 20 &&
+            " Consider reducing your withdrawal amount or adjusting your asset allocation for longevity."}
         </p>
       </div>
     </NeoBrutalBox>
