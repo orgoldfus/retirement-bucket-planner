@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Bucket, Currency, TimeFrame, WithdrawalPlan } from "../types";
 import {
   estimatePortfolioLongevity,
@@ -7,6 +7,7 @@ import {
 } from "../utils/calculations";
 import NeoBrutalBox from "./NeoBrutalBox";
 import NeoBrutalInput from "./NeoBrutalInput";
+import PortfolioChart from "./PortfolioChart";
 
 interface WithdrawalPlanningProps {
   totalCapital: number;
@@ -25,7 +26,12 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
   selectedCurrency,
   selectedTimeFrame,
 }) => {
-  const updateWithdrawalPlan = (field: keyof WithdrawalPlan, value: any) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const updateWithdrawalPlan = (
+    field: keyof WithdrawalPlan,
+    value: number | boolean
+  ) => {
     setWithdrawalPlan({
       ...withdrawalPlan,
       [field]: value,
@@ -41,6 +47,15 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
 
   const portfolioLongevity = estimatePortfolioLongevity(projections);
   const lastProjectionYear = projections.length - 1;
+
+  const yearsToDisplay = expanded ? projections.length : 10;
+
+  const chartData = projections.map((projection) => ({
+    year: projection.year,
+    portfolioValue: projection.portfolioValue,
+    withdrawal: projection.withdrawal,
+    returns: projection.returns,
+  }));
 
   return (
     <NeoBrutalBox title="Withdrawal Planning" className="mb-6">
@@ -151,7 +166,7 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
               </tr>
             </thead>
             <tbody>
-              {projections.slice(0, 10).map((projection) => (
+              {projections.slice(0, yearsToDisplay).map((projection) => (
                 <tr
                   key={projection.year}
                   className={`
@@ -188,11 +203,24 @@ const WithdrawalPlanning: React.FC<WithdrawalPlanningProps> = ({
           </table>
         </div>
 
-        {projections.length > 10 && (
+        {expanded && (
+          <PortfolioChart data={chartData} currency={selectedCurrency} />
+        )}
+
+        {!expanded && projections.length > 10 && (
           <div className="mt-2 text-center font-brutal text-sm text-neutral-600">
             Showing first 10 years of projection. Full data available in export.
           </div>
         )}
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="inline-block px-4 py-2 bg-white border-3 border-black font-brutal shadow-neobrutalism hover:shadow-neobrutalism-sm active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+          >
+            {expanded ? "Show Less" : "Show More"}
+          </button>
+        </div>
       </div>
 
       <div className="p-4 bg-primary-100 border-l-6 border-primary-500">
