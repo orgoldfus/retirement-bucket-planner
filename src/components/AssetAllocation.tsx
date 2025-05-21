@@ -34,6 +34,17 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
     }
   }, [buckets, activeBucketIndex]);
 
+  // Recalculate yields when timeframe changes
+  useEffect(() => {
+    if (buckets.length > 0) {
+      const updatedBuckets = buckets.map((bucket) => ({
+        ...bucket,
+        expectedYield: calculateBucketYield(bucket, selectedTimeFrame),
+      }));
+      setBuckets(updatedBuckets);
+    }
+  }, [selectedTimeFrame, assets, buckets, setBuckets]);
+
   const activeBucket = buckets[activeBucketIndex] || buckets[0];
 
   const handleAssetAllocationChange = (
@@ -405,15 +416,16 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
         <p className="font-brutal">
           Based on{" "}
           {selectedTimeFrame === "oneYear"
-            ? "1 year"
+            ? "1"
             : selectedTimeFrame === "fiveYear"
-            ? "5 year"
+            ? "5"
             : selectedTimeFrame === "tenYear"
-            ? "10 year"
+            ? "10"
             : selectedTimeFrame === "twentyYear"
-            ? "20 year"
-            : "30 year"}{" "}
-          historical performance, this bucket has an expected annual return of{" "}
+            ? "20"
+            : "30"}{" "}
+          year historical performance, this bucket has an expected annual return
+          of{" "}
           <span className="font-bold">
             {formatPercentage(activeBucket?.expectedYield || 0)}
           </span>
