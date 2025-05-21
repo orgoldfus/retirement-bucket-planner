@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Asset, Bucket, CustomAsset, TimeFrame } from "../types";
 import { calculateBucketYield, formatPercentage } from "../utils/calculations";
@@ -20,7 +20,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
   selectedTimeFrame,
 }) => {
   const [activeBucketIndex, setActiveBucketIndex] = useState(0);
-  const [showAllAssets, setShowAllAssets] = useState(false);
+  const [showAssetSelector, setShowAssetSelector] = useState(false);
   const [showCustomAssetForm, setShowCustomAssetForm] = useState(false);
   const [customAsset, setCustomAsset] = useState<CustomAsset>({
     name: "",
@@ -102,8 +102,16 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
     };
 
     assets.push(newAsset);
+    // Start with a default allocation of 10% for new custom assets
+    handleAssetAllocationChange(customAssetId, 10);
     setCustomAsset({ name: "", historicalReturn: 0 });
     setShowCustomAssetForm(false);
+  };
+
+  const handleAddAsset = (asset: Asset) => {
+    // Start with a default allocation of 10% when adding a new asset
+    handleAssetAllocationChange(asset.id, 10);
+    setShowAssetSelector(false);
   };
 
   const getTotalAllocation = () => {
@@ -130,26 +138,32 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
     return allocation ? allocation.percentage : 0;
   };
 
-  const internationalAssets = assets.filter(
-    (asset) => asset.type === "international"
-  );
-  const israeliAssets = assets.filter((asset) => asset.type === "israeli");
-  const customAssets = assets.filter((asset) => asset.type === "custom");
+  const getAssetById = (assetId: string) => {
+    return assets.find((asset) => asset.id === assetId);
+  };
 
-  const displayedAssets = showAllAssets
-    ? assets
-    : assets.filter((asset) => {
-        const isAllocated = activeBucket.allocation.some(
-          (alloc) => alloc.assetId === asset.id
-        );
-        const isTopInternational =
-          internationalAssets.indexOf(asset) < 2 &&
-          asset.type === "international";
-        const isTopIsraeli =
-          israeliAssets.indexOf(asset) < 2 && asset.type === "israeli";
-        const isCustom = asset.type === "custom";
-        return isAllocated || isTopInternational || isTopIsraeli || isCustom;
-      });
+  // Get assets that are already allocated to the active bucket
+  const allocatedAssets = (activeBucket?.allocation || [])
+    .map((alloc) => {
+      const asset = getAssetById(alloc.assetId);
+      return asset ? { ...asset, allocation: alloc.percentage } : null;
+    })
+    .filter(Boolean) as (Asset & { allocation: number })[];
+
+  // Get assets available to add (not already allocated)
+  const availableAssets = assets.filter(
+    (asset) =>
+      !activeBucket?.allocation?.some((alloc) => alloc.assetId === asset.id)
+  );
+
+  // Group available assets by type
+  const groupedAvailableAssets = {
+    international: availableAssets.filter(
+      (asset) => asset.type === "international"
+    ),
+    israeli: availableAssets.filter((asset) => asset.type === "israeli"),
+    custom: availableAssets.filter((asset) => asset.type === "custom"),
+  };
 
   return (
     <NeoBrutalBox title="Asset Allocation" className="mb-6">
@@ -176,12 +190,12 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
       <div className="bg-white border-3 border-black p-4 mb-4">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-brutal font-bold">
-            Allocation for {activeBucket.name}
+            Allocation for {activeBucket?.name}
           </h3>
           <div className="text-sm font-mono font-bold">
             Time Horizon:{" "}
             <span className="bg-neutral-900 text-white px-2">
-              {activeBucket.timeHorizon} years
+              {activeBucket?.timeHorizon} years
             </span>
           </div>
         </div>
@@ -230,18 +244,93 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
         </div>
 
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <div className="font-brutal font-bold">International Assets</div>
-            <NeoBrutalButton
-              onClick={() => setShowCustomAssetForm(true)}
-              variant="secondary"
-              size="sm"
-            >
-              <PlusIcon className="w-4 h-4 mr-1" />
-              Add Custom Asset
-            </NeoBrutalButton>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-brutal font-bold">Assets</h3>
+            <div className="flex space-x-2">
+              <NeoBrutalButton
+                onClick={() => setShowAssetSelector(true)}
+                variant="primary"
+                size="sm"
+              >
+                <PlusIcon className="w-4 h-4 mr-1" />
+                Add Asset
+              </NeoBrutalButton>
+              <NeoBrutalButton
+                onClick={() => setShowCustomAssetForm(true)}
+                variant="secondary"
+                size="sm"
+              >
+                <PlusIcon className="w-4 h-4 mr-1" />
+                Add Custom Asset
+              </NeoBrutalButton>
+            </div>
           </div>
 
+          {/* Asset Selector Modal */}
+          {showAssetSelector && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white border-3 border-black p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-brutal font-bold">Select an Asset</h3>
+                  <button
+                    onClick={() => setShowAssetSelector(false)}
+                    className="p-1"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {Object.keys(groupedAvailableAssets).map((assetType) => {
+                  const assets =
+                    groupedAvailableAssets[
+                      assetType as keyof typeof groupedAvailableAssets
+                    ];
+                  if (assets.length === 0) return null;
+
+                  return (
+                    <div key={assetType} className="mb-4">
+                      <h4 className="font-brutal font-bold capitalize mb-2">
+                        {assetType} Assets
+                      </h4>
+                      <div className="space-y-2">
+                        {assets.map((asset) => (
+                          <button
+                            key={asset.id}
+                            onClick={() => handleAddAsset(asset)}
+                            className="w-full text-left p-3 border-2 border-black hover:bg-neutral-100 flex justify-between items-center"
+                          >
+                            <div>
+                              <div className="font-brutal font-bold">
+                                {asset.name}
+                              </div>
+                              <div className="text-xs text-neutral-600">
+                                {asset.description}
+                              </div>
+                            </div>
+                            <div className="font-mono font-bold">
+                              {formatPercentage(
+                                asset.historicalReturn[selectedTimeFrame] * 100
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {Object.values(groupedAvailableAssets).every(
+                  (assets) => assets.length === 0
+                ) && (
+                  <p className="text-center py-4 text-neutral-600">
+                    No assets available to add. All assets have been allocated.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Custom Asset Form */}
           {showCustomAssetForm && (
             <div className="border-3 border-black p-4 mb-4 bg-neutral-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,10 +377,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
             </div>
           )}
 
-          <div className="space-y-3">
-            {displayedAssets
-              .filter((asset) => asset.type === "international")
-              .map((asset) => (
+          {/* Allocated Assets List */}
+          {allocatedAssets.length > 0 ? (
+            <div className="space-y-3">
+              {allocatedAssets.map((asset) => (
                 <AssetAllocationItem
                   key={asset.id}
                   asset={asset}
@@ -300,52 +389,14 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
                   timeFrame={selectedTimeFrame}
                 />
               ))}
-          </div>
-
-          <div className="font-brutal font-bold mt-6 mb-2">Israeli Assets</div>
-          <div className="space-y-3">
-            {displayedAssets
-              .filter((asset) => asset.type === "israeli")
-              .map((asset) => (
-                <AssetAllocationItem
-                  key={asset.id}
-                  asset={asset}
-                  allocation={getAssetAllocation(asset.id)}
-                  onAllocationChange={handleAssetAllocationChange}
-                  timeFrame={selectedTimeFrame}
-                />
-              ))}
-          </div>
-
-          {customAssets.length > 0 && (
-            <>
-              <div className="font-brutal font-bold mt-6 mb-2">
-                Custom Assets
-              </div>
-              <div className="space-y-3">
-                {customAssets.map((asset) => (
-                  <AssetAllocationItem
-                    key={asset.id}
-                    asset={asset}
-                    allocation={getAssetAllocation(asset.id)}
-                    onAllocationChange={handleAssetAllocationChange}
-                    timeFrame={selectedTimeFrame}
-                  />
-                ))}
-              </div>
-            </>
+            </div>
+          ) : (
+            <div className="text-center py-6 border-3 border-dashed border-neutral-300">
+              <p className="text-neutral-600 font-brutal">
+                No assets allocated yet. Click "Add Asset" to get started.
+              </p>
+            </div>
           )}
-
-          <div className="mt-4">
-            <button
-              onClick={() => setShowAllAssets(!showAllAssets)}
-              className="text-secondary-600 font-brutal underline text-sm hover:text-secondary-800"
-            >
-              {showAllAssets
-                ? "Show fewer assets"
-                : "Show all available assets"}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -364,7 +415,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({
             : "30 year"}{" "}
           historical performance, this bucket has an expected annual return of{" "}
           <span className="font-bold">
-            {formatPercentage(activeBucket.expectedYield)}
+            {formatPercentage(activeBucket?.expectedYield || 0)}
           </span>
           .
         </p>
